@@ -1,0 +1,29 @@
+name: Create Orphan Process
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  create-orphan:
+    runs-on: self-hosted
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Before - Check for existing orphans
+        run: python3 orphan_process_test.py list
+
+      - name: Create orphan process
+        run: |
+          echo "Creating orphan process..."
+          python3 orphan_process_test.py &
+          sleep 3
+
+      - name: After - Check orphans (should see the orphan)
+        run: python3 orphan_process_test.py list
+
+      - name: Job ends - orphan should be cleaned up automatically
