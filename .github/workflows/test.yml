@@ -17,33 +17,13 @@ jobs:
       - name: Before - Check for existing orphans
         run: python3 orphan_process_test.py list
 
-      - name: Create orphan process with process group isolation
+      - name: Create orphan process
         run: |
-          echo "Creating orphan process with process group isolation..."
-          # Try method 1: Set process group and session
-          setsid python3 orphan_process_test.py &
+          echo "Creating orphan process..."
+          RUNNER_TRACKING_ID="" && python3 orphan_process_test.py &
           sleep 3
-
-      - name: Create orphan process with nohup
-        run: |
-          echo "Creating orphan process with nohup..."
-          # Try method 2: Use nohup to detach from terminal
-          nohup python3 orphan_process_test.py > /tmp/orphan_nohup.log 2>&1 &
-          sleep 2
-
-      - name: Create orphan process with systemd-run
-        run: |
-          echo "Creating orphan process with systemd-run..."
-          # Try method 3: Use systemd-run if available
-          if command -v systemd-run >/dev/null 2>&1; then
-            systemd-run --user --scope python3 orphan_process_test.py &
-          else
-            echo "systemd-run not available"
-          fi
-          sleep 2
 
       - name: After - Check orphans (should see the orphan)
         run: python3 orphan_process_test.py list
 
       - name: Job ends - orphan should be cleaned up automatically
-        run: echo "Job ending - check if orphan gets cleaned up"
