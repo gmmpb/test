@@ -1,0 +1,146 @@
+name: Enhanced Self-Hosted Runner Test with Cleanup
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: "Type of test to run"
+        required: true
+        default: "process_groups"
+        type: choice
+        options:
+          - process_groups
+          - cleanup_test
+          - stress_test
+          - monitor_only
+
+jobs:
+  test-with-cleanup:
+    runs-on: self-hosted
+    timeout-minutes: 15
+
+    steps:
+      - name: Pre-job cleanup
+        run: |
+          echo "=== PRE-JOB CLEANUP ==="
+          if [[ -f ./runner_cleanup.sh ]]; then
+            ./runner_cleanup.sh cleanup
+          else
+            echo "Cleanup script not found, doing basic cleanup..."
+            pkill -f "orphan_process_test" || echo "No orphan processes to kill"
+            pkill -f "background_script" || echo "No background processes to kill"
+            rm -f /tmp/*marker*.txt || echo "No marker files to clean"
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Show initial system state
+        run: |
+          echo "=== INITIAL SYSTEM STATE ==="
+          ./runner_cleanup.sh monitor
+
+      - name: Test process groups
+        if: github.event.inputs.test_type == 'process_groups' || github.event.inputs.test_type == ''
+        run: |
+          echo "=== TESTING PROCESS GROUPS ==="
+          echo "Creating orphan process with process group..."
+          python3 enhanced_orphan_test.py pgroup_orphan &
+          sleep 3
+
+          echo "Creating subprocess with process group..."
+          python3 enhanced_orphan_test.py pgroup_subprocess &
+          sleep 3
+
+          echo "Listing process groups..."
+          python3 enhanced_orphan_test.py list
+
+          echo "Waiting for processes to establish..."
+          sleep 5
+
+          echo "Final process group state:"
+          python3 enhanced_orphan_test.py list
+
+      - name: Test cleanup functionality
+        if: github.event.inputs.test_type == 'cleanup_test'
+        run: |
+          echo "=== TESTING CLEANUP FUNCTIONALITY ==="
+
+          # Create several types of processes
+          echo "Creating various orphan processes..."
+          python3 orphan_process_test.py background &
+          python3 enhanced_orphan_test.py pgroup_orphan &
+          python3 enhanced_orphan_test.py pgroup_subprocess &
+
+          sleep 5
+          echo "Before cleanup:"
+          ./runner_cleanup.sh monitor
+
+          echo "Running cleanup..."
+          ./runner_cleanup.sh cleanup
+
+          sleep 2
+          echo "After cleanup:"
+          ./runner_cleanup.sh monitor
+
+      - name: Stress test
+        if: github.event.inputs.test_type == 'stress_test'
+        run: |
+          echo "=== STRESS TEST ==="
+          echo "Creating multiple orphan processes..."
+
+          for i in {1..5}; do
+            echo "Creating orphan process set $i..."
+            python3 orphan_process_test.py background &
+            python3 enhanced_orphan_test.py pgroup_orphan &
+            sleep 1
+          done
+
+          sleep 5
+          echo "Process state during stress test:"
+          ./runner_cleanup.sh monitor
+
+          echo "Running aggressive cleanup..."
+          ./runner_cleanup.sh aggressive
+
+          sleep 2
+          echo "After stress test cleanup:"
+          ./runner_cleanup.sh monitor
+
+      - name: Monitor only
+        if: github.event.inputs.test_type == 'monitor_only'
+        run: |
+          echo "=== MONITORING SYSTEM ==="
+          ./runner_cleanup.sh monitor
+
+          echo "Checking for existing orphan processes..."
+          python3 cleanup_script.py list
+          python3 enhanced_orphan_test.py list
+
+      - name: Show final system state
+        if: always()
+        run: |
+          echo "=== FINAL SYSTEM STATE ==="
+          ./runner_cleanup.sh monitor
+
+      - name: Post-job cleanup (always run)
+        if: always()
+        run: |
+          echo "=== POST-JOB CLEANUP ==="
+          ./runner_cleanup.sh full
+
+          # Final verification
+          echo "Final verification - checking for remaining processes..."
+          python3 cleanup_script.py list || echo "Cleanup script check completed"
+          python3 enhanced_orphan_test.py list || echo "Enhanced script check completed"
+
+          echo "=== CLEANUP COMPLETED ==="
