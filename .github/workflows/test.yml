@@ -20,7 +20,7 @@ jobs:
       - name: Create orphan process
         run: |
           echo "Creating orphan process..."
-          RUNNER_TRACKING_ID="" && python3 orphan_process_test.py &
+          python3 orphan_process_test.py &
           sleep 3
 
       - name: After - Check orphans (should see the orphan)
