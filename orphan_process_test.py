@@ -40,11 +40,9 @@ def create_orphan():
         
         # Clean up
         os.remove(f"/tmp/orphan_{os.getpid()}.txt")
-        sys.exit(0)
     else:
         # Parent exits immediately to create orphan
         print(f"Created child {pid}, parent exiting to make orphan")
-        sys.exit(0)
 
 def list_orphans():
     """Show orphan processes and marker files."""
