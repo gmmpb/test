@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Before - Check for existing orphans
-        run: python3 orphan_process_test.py list
+        run: RUNNER_TRACKING_ID="" && python3 orphan_process_test.py list
 
       - name: Create orphan process
         run: |
