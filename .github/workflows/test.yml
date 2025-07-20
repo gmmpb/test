@@ -25,5 +25,3 @@ jobs:
 
       - name: After - Check orphans (should see the orphan)
         run: python3 orphan_process_test.py list
-
-      - name: Job ends - orphan should be cleaned up automatically
