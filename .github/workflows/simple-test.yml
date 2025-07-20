@@ -50,11 +50,17 @@ jobs:
           echo "=== Python Scripts ==="
           ls -la *.py
 
-      - name: Test our scripts exist and are executable
+      - name: Create orphan process to demonstrate the problem
         run: |
-          echo "=== Testing Script Availability ==="
-          test -f orphan_process_test.py && echo "✅ orphan_process_test.py exists" || echo "❌ orphan_process_test.py missing"
-          test -f cleanup_script.py && echo "✅ cleanup_script.py exists" || echo "❌ cleanup_script.py missing"
+          echo "=== CREATING ORPHAN PROCESS ==="
+          echo "⚠️  This will create a process that survives after the job ends!"
 
-          echo "Testing script execution:"
+          # Create an orphan process
+          python3 orphan_process_test.py orphan &
+
+          sleep 3
+          echo "Checking for orphan processes..."
           python3 orphan_process_test.py list
+
+          echo "⚠️  Job ending - but orphan process will continue running!"
+          echo "⚠️  Check your system with 'ps aux | grep orphan' after this job completes"
