@@ -11,7 +11,6 @@ def create_orphan():
 
     if pid == 0:
         # Child becomes orphan when parent exits
-        # Child becomes orphan when parent exits
         time.sleep(2)  # Let parent exit
         
         # Create marker file
