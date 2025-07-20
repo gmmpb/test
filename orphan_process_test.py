@@ -8,7 +8,9 @@ def create_orphan():
     """Create a simple orphan process."""
     pid = os.fork()
     
+
     if pid == 0:
+        # Child becomes orphan when parent exits
         # Child becomes orphan when parent exits
         time.sleep(2)  # Let parent exit
         
