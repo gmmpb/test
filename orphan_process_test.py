@@ -50,6 +50,9 @@ def list_orphans():
     os.system("/bin/ps aux | grep python | grep -v grep")
     print("\n=== MARKER FILES ===")
     os.system("ls -la /tmp/orphan_*.txt 2>/dev/null || echo 'No orphan marker files'")
+    print("\n=== NOHUP LOG ===")
+    os.system("ls -la /tmp/orphan_nohup.log 2>/dev/null && echo 'Nohup log exists' || echo 'No nohup log'")
+    os.system("tail -5 /tmp/orphan_nohup.log 2>/dev/null || echo 'Cannot read nohup log'")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "list":

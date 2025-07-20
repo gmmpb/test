@@ -19,8 +19,9 @@ jobs:
 
       - name: Create orphan process
         run: |
-          echo "Creating orphan process with setsid..."
-          setsid python3 orphan_process_test.py >/dev/null 2>&1 < /dev/null &
+          echo "Creating orphan process with nohup + disown..."
+          nohup python3 orphan_process_test.py > /tmp/orphan_nohup.log 2>&1 &
+          disown -h
           sleep 3
 
       - name: After - Check orphans (should see the orphan)
