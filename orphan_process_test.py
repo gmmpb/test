@@ -10,7 +10,7 @@ def create_orphan():
     try:
         os.setsid()
     except OSError:
-        pass  # Already a session leader1
+        pass  # Already a session leader12
     
     pid = os.fork()
     
