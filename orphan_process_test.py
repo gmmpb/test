@@ -6,21 +6,37 @@ from datetime import datetime
 
 def create_orphan():
     """Create a simple orphan process."""
+    # Try to detach from process group
+    try:
+        os.setsid()
+    except OSError:
+        pass  # Already a session leader
+    
     pid = os.fork()
     
-
     if pid == 0:
         # Child becomes orphan when parent exits
+        try:
+            os.setsid()  # Create new session
+        except OSError:
+            pass
+        
         time.sleep(2)  # Let parent exit
         
         # Create marker file
         with open(f"/tmp/orphan_{os.getpid()}.txt", "w") as f:
             f.write(f"Orphan {os.getpid()} created at {datetime.now()}\n")
+            f.write(f"PPID: {os.getppid()}\n")
+            f.write(f"SID: {os.getsid(0)}\n")
         
-        # Run for a while
-        for i in range(60):
+        # Run for a while with heartbeat
+        for i in range(120):  # Run longer
             time.sleep(5)
             print(f"Orphan {os.getpid()} iteration {i+1}")
+            
+            # Update marker file to show we're alive
+            with open(f"/tmp/orphan_{os.getpid()}.txt", "a") as f:
+                f.write(f"Heartbeat {i+1} at {datetime.now()}\n")
         
         # Clean up
         os.remove(f"/tmp/orphan_{os.getpid()}.txt")
