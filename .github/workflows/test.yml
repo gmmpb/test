@@ -27,3 +27,4 @@ jobs:
         run: python3 orphan_process_test.py list
 
       - name: Job ends - orphan should be cleaned up automatically
+        run: echo "Job ending - check if orphan gets cleaned up"
