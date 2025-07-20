@@ -28,6 +28,8 @@ venv/
 env/
 ENV/
 
+actions-runner
+
 # IDE
 .vscode/
 .idea/
